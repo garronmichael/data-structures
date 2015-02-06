@@ -24,15 +24,12 @@ treeMethods.contains = function(target){
     return true;
   } else if(this.children.length) {
     for(var i = 0; i < this.children.length; i++) {
-      if(this.children[i].value === target) {
-        return true;
-      } else {
-          this.children[i].contains(target);
+        if(this.children[i].contains(target)) {
+          return true;
+        }
       }
     }
-  } else {
-    return false;
-  }
+  return false;
 };
 
 

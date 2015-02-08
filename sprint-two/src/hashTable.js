@@ -6,29 +6,25 @@ var HashTable = function(){
 
 HashTable.prototype.insert = function(k, v){
   var i = getIndexBelowMaxForKey(k, this._limit);
-  //check index for bucket
   var bucket = this._storage.get(i);
-  // if !bucket
   if(!bucket) {
-     // create a bucket at storage[i]
       var bucket = [];
-      this._storage.set(i, bucket); // What is the difference between <-- and this.set(i, bucket);
+      this._storage.set(i, bucket);
   }
-  //search if the key is in the bucket
   var found = false;
   for(var i = 0; i < bucket.length; i++) {
     var tuple = bucket[i];
-    // if tuple with k
     if(tuple[0] === k) {
-          // overwrite
       tuple[1] = v;
       found = true;
     }
   }
-    // if no tuple with k
   if(!found) {
-          // add [k, v] to bucket
     bucket.push([k, v]);
+    this._counter++;
+    if (this._counter > this._limit * 0.75) {
+      this.resize(this._limit * 2);
+    }
   }
 };
 
@@ -57,13 +53,31 @@ HashTable.prototype.remove = function(k){
     var tuple = bucket[i];
     if(tuple[0] === k) {
       bucket.splice(i, 1);
-        return tuple[1];
+      this._counter--;
+      if (this._counter < this._limit * 0.25) {
+        this.resize(this._limit * 0.5);
+      }
+      return tuple[1];
     }
   }
   return null;
 };
 
-
+HashTable.prototype.resize = function(limit) {
+  var oldStorage = this._storage;
+  this._storage = LimitedArray(limit);
+  this._limit = limit;
+  this._counter = 0;
+  oldStorage.each(function(bucket) {
+    if(!bucket) {
+      return;
+    }
+    for(var i = 0; i < bucket.length; i++) {
+        var tuple = bucket[i];
+        this.insert(tuple[0], tuple[1]);
+    }
+  }.bind(this));
+};
 
 /*
  * Complexity: What is the time complexity of the above functions?
